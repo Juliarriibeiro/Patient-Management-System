@@ -331,9 +331,9 @@ export default function DoctorDashboard() {
             <>
               <h2 className="text-2xl font-bold mb-4">Upcoming Appointments</h2>
               <div className="grid grid-cols-1 gap-4">
-                {appointments
-                  .filter((appt) => appt.doctorName === user.name)
-                  .map((appt) => (
+              {[...appointments, ...(JSON.parse(localStorage.getItem("patientAppointments")) || [])]
+                .filter((appt) => appt.doctorName === user.name)
+                .map((appt) => (
                     <div key={appt.id} className="bg-white p-4 rounded-xl shadow hover:scale-105 transition">
                       <p><span className="font-bold">Patient:</span> {appt.patientName}</p>
                       <p><span className="font-bold">Date:</span> {appt.date}</p>
