@@ -16,7 +16,7 @@ export default function DoctorDashboard() {
   const [newMessage, setNewMessage] = useState({ receiver: "", text: "" });
   const [receiver, setReceiver] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [medicalRecords, setMedicalRecords] = useState([]);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -56,7 +56,18 @@ export default function DoctorDashboard() {
     localStorage.setItem("messages", JSON.stringify(updatedMessages));
     setNewMessage({ receiver: "", text: "" });
   };
-
+  
+  const handleDeleteMessage = async (id) => {
+    try {
+      await fetch(`https://680dc4fec47cb8074d912473.mockapi.io/conversations/${id}`, {
+        method: "DELETE",
+      });
+      setMessages((prev) => prev.filter((msg) => msg.id !== id));
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+  };
+  
   const handleLogout = () => {
     localStorage.removeItem("user");
     router.push("/");
@@ -340,15 +351,16 @@ export default function DoctorDashboard() {
 
     {/* Conversation List */}
     <div className="space-y-4 mb-6">
-      {messages.map((msg) => (
-        <div key={msg.id} className="bg-white p-4 rounded-xl shadow">
-          <div className="flex justify-between items-center mb-2">
-            <p className="font-semibold">{msg.sender} ➔ {msg.receiver}</p>
-            <p className="text-sm text-gray-500">{new Date(msg.timestamp).toLocaleString()}</p>
-          </div>
-          <p>{msg.text}</p>
-        </div>
-      ))}
+    {messages.map((msg) => (
+  <div key={msg.id} className="bg-white p-4 rounded-xl shadow relative">
+    <div className="flex justify-between items-center mb-2">
+      <p className="font-semibold">{msg.sender} ➔ {msg.receiver}</p>
+      <p className="text-sm text-gray-500">{new Date(msg.timestamp).toLocaleString()}</p>
+    </div>
+    <p>{msg.text}</p>
+  </div>
+))}
+
     </div>
 
     {/* Send New Message */}
@@ -398,7 +410,22 @@ export default function DoctorDashboard() {
             <h2 className="text-2xl font-bold mb-4">Patient Details</h2>
             <p><span className="font-bold">Name:</span> {selectedPatient.name}</p>
             <p><span className="font-bold">Email:</span> {selectedPatient.email}</p>
-            <p><span className="font-bold">Medical History:</span> No major issues.</p>
+            <div className="mt-4">
+        <p><span className="font-bold">Medical Records:</span></p>
+        {medicalRecords.filter(record => record.patientName === selectedPatient.name).length > 0 ? (
+          <ul className="mt-2 space-y-2">
+            {medicalRecords
+              .filter(record => record.patientName === selectedPatient.name)
+              .map((record) => (
+                <li key={record.id} className="text-sm text-gray-700">
+                  • {record.diagnosis} (Last Visit: {record.lastVisit})
+                </li>
+              ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-600 mt-2">No records available.</p>
+        )}
+      </div>
             <button onClick={() => setIsModalOpen(false)} className="mt-6 w-full bg-red-500 text-white py-2 rounded-md hover:bg-red-600">
               Close
             </button>
