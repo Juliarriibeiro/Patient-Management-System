@@ -26,48 +26,36 @@ export default function DoctorDashboard() {
       router.push("/");
     }
   }, []);
+  
+  useEffect(() => {
+    const storedRecords = JSON.parse(localStorage.getItem("medicalRecords")) || [];
+    setMedicalRecords(storedRecords);
+  }, []);
 
   useEffect(() => {
-    const fetchConversations = async () => {
-      if (activeTab === "messages") {
-        try {
-          const res = await fetch("https://680dc4fec47cb8074d912473.mockapi.io/conversations");
-          const data = await res.json();
-          setMessages(data);
-        } catch (error) {
-          console.error("Failed to load conversations:", error);
-        }
-      }
-    };
-    fetchConversations();
-  }, [activeTab]);
-  
+    if (activeTab === "messages") {
+      const localMessages = JSON.parse(localStorage.getItem("messages")) || [];
+      setMessages(localMessages);
+    }
+  }, [activeTab]);  
 
-  const sendMessage = async () => {
+
+  const sendMessage = () => {
     if (!newMessage.text.trim() || !newMessage.receiver) return;
   
-    try {
-      const res = await fetch("https://680dc4fec47cb8074d912473.mockapi.io/conversations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: user.name,
-          receiver: newMessage.receiver,
-          text: newMessage.text,
-          timestamp: new Date().toLocaleString()
-        }),
-      });
+    const newMsg = {
+      id: Date.now(),
+      sender: user.name,
+      receiver: newMessage.receiver,
+      text: newMessage.text,
+      timestamp: new Date().toLocaleString()
+    };
   
-      if (res.ok) {
-        const newMsg = await res.json();
-        setMessages((prev) => [...prev, newMsg]);
-        setNewMessage("");
-        setSelectedReceiver(""); // Optional: reset dropdown
-      }
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  };  
+    const updatedMessages = [...messages, newMsg];
+    setMessages(updatedMessages);
+    localStorage.setItem("messages", JSON.stringify(updatedMessages));
+    setNewMessage({ receiver: "", text: "" });
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
